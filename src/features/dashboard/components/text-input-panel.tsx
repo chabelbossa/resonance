@@ -58,7 +58,7 @@ export function TextInputPanel() {
               </span>
             </Badge>
             <span className="text-xs text-muted-foreground">
-              {text.length.toLocaleString()} / {TEXT_MAX_LENGTH.toLocaleString()} characters
+              {text.length.toLocaleString("en-US")} / {TEXT_MAX_LENGTH.toLocaleString("en-US")} characters
             </span>
           </div>
         </div>

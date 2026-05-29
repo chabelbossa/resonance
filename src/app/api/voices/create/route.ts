@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { parseBuffer } from "music-metadata";
 import { z } from "zod";
 import { polar } from "@/lib/polar";
@@ -6,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { uploadAudio } from "@/lib/r2";
 import { VOICE_CATEGORIES } from "@/features/voices/data/voice-categories";
 import type { VoiceCategory } from "@/generated/prisma/client";
+import { getAuthContext } from "@/lib/auth-server";
 
 const createVoiceSchema = z.object({
   name: z.string().min(1, "Voice name is required"),
@@ -18,7 +18,7 @@ const MAX_UPLOAD_SIZE_BYTES = 20 * 1024 * 1024; // 20 MB
 const MIN_AUDIO_DURATION_SECONDS = 10;
 
 export async function POST(request: Request) {
-  const { userId, orgId } = await auth();
+  const { userId, orgId } = await getAuthContext();
 
   if (!userId || !orgId) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });

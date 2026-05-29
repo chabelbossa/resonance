@@ -5,6 +5,10 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TRPCReactProvider } from "@/trpc/client";
+import {
+  isClerkPublicConfigured,
+  isLocalDemoAuthEnabled,
+} from "@/lib/auth-config";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,6 +26,9 @@ export const metadata: Metadata = {
     template: "%s | Resonance"
   },
   description: "AI-powered text-to-speech and voice cloning platform",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -29,20 +36,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <TRPCReactProvider>
-        <html lang="en">
-          <body
-            className={`${inter.variable} ${geistMono.variable} antialiased`}
-          >
-            <NuqsAdapter>
-              {children}
-            </NuqsAdapter>
-            <Toaster />
-          </body>
-        </html>
-      </TRPCReactProvider>
-    </ClerkProvider>
+  const document = (
+    <TRPCReactProvider>
+      <html lang="en">
+        <body className={`${inter.variable} ${geistMono.variable} antialiased`}>
+          <NuqsAdapter>{children}</NuqsAdapter>
+          <Toaster />
+        </body>
+      </html>
+    </TRPCReactProvider>
   );
+
+  if (isLocalDemoAuthEnabled && !isClerkPublicConfigured) {
+    return document;
+  }
+
+  return <ClerkProvider>{document}</ClerkProvider>;
 }

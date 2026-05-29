@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCheckout } from "@/features/billing/hooks/use-checkout";
+import { isClerkPublicConfigured, isLocalDemoAuthEnabled } from "@/lib/auth-config";
 import { useTRPC } from "@/trpc/client";
 
 function formatCurrency(cents: number): string {
@@ -97,7 +98,22 @@ function UsageCard({
   );
 };
 
-export function UsageContainer() {
+function LocalUsageContainer() {
+  return (
+    <div className="group-data-[collapsible=icon]:hidden bg-background border border-border rounded-lg p-3">
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-semibold tracking-tight text-foreground">
+          Local demo
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Billing is disabled until Polar and Clerk are configured.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function RemoteUsageContainer() {
   const trpc = useTRPC();
   const { data } = useQuery(trpc.billing.getStatus.queryOptions());
 
@@ -110,4 +126,12 @@ export function UsageContainer() {
       )}
     </div>
   );
+}
+
+export function UsageContainer() {
+  if (isLocalDemoAuthEnabled && !isClerkPublicConfigured) {
+    return <LocalUsageContainer />;
+  }
+
+  return <RemoteUsageContainer />;
 };

@@ -1,11 +1,16 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { shouldUseLocalDemoAuth } from "@/lib/auth-server";
 
 const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
 const isOrgSelectionRoute = createRouteMatcher(["/org-selection(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
+  if (shouldUseLocalDemoAuth()) {
+    return NextResponse.next();
+  }
+
   const { userId, orgId } = await auth();
 
   // Allow public routes

@@ -101,6 +101,8 @@ export const WavyBackground = ({
     return () => {
       cancelAnimationFrame(animationId);
     };
+    // Canvas animation state is intentionally initialized once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [isSafari, setIsSafari] = useState(false);

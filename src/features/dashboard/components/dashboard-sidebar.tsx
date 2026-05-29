@@ -36,6 +36,7 @@ import Link from "next/link";
 import { UsageContainer } from "@/features/billing/components/usage-container";
 import { VoiceCreateDialog } from "@/features/voices/components/voice-create-dialog";
 import { useState } from "react";
+import { isClerkPublicConfigured, isLocalDemoAuthEnabled } from "@/lib/auth-config";
 
 interface MenuItem {
   title: string;
@@ -95,9 +96,42 @@ function NavSection({ label, items, pathname }: NavSectionProps) {
   );
 }
 
-export function DashboardSidebar() {
+function LocalOrganizationControl() {
+  return (
+    <div className="flex h-8.5 w-full items-center gap-2 rounded-md border border-border bg-white px-1 py-1 shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)] group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
+      <div className="flex size-6 items-center justify-center rounded-sm bg-[#327c88] text-xs font-semibold text-white">
+        D
+      </div>
+      <span className="truncate text-[13px] font-medium tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
+        Local demo
+      </span>
+    </div>
+  );
+}
+
+function LocalUserControl() {
+  return (
+    <div className="flex h-8.5 w-full items-center gap-2 rounded-md border border-border bg-white px-1 py-1 shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)] group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-1">
+      <div className="flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
+        L
+      </div>
+      <span className="truncate text-[13px] font-medium tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
+        Local user
+      </span>
+    </div>
+  );
+}
+
+function DashboardSidebarContent({
+  organizationControl,
+  userControl,
+  onSettingsClick,
+}: {
+  organizationControl: React.ReactNode;
+  userControl: React.ReactNode;
+  onSettingsClick: () => void;
+}) {
   const pathname = usePathname();
-  const clerk = useClerk();
   const [voiceDialogOpen, setVoiceDialogOpen] = useState(false);
 
   const mainMenuItems: MenuItem[] = [
@@ -127,7 +161,7 @@ export function DashboardSidebar() {
     {
       title: "Settings",
       icon: Settings,
-      onClick: () => clerk.openOrganizationProfile(),
+      onClick: onSettingsClick,
     },
     {
       title: "Help and support",
@@ -160,29 +194,7 @@ export function DashboardSidebar() {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <OrganizationSwitcher
-              hidePersonal
-              fallback={
-                <Skeleton
-                  className="h-8.5 w-full group-data-[collapsible=icon]:size-8 rounded-md border bg-white"
-                />
-              }
-              appearance={{
-                elements: {
-                  rootBox: 
-                    "w-full! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:justify-center!",
-                  organizationSwitcherTrigger:
-                    "w-full! justify-between! bg-white! border! border-border! rounded-md! pl-1! pr-2! py-1! gap-3! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:p-1! shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)]!",
-                  organizationPreview: "gap-2!",
-                  organizationPreviewAvatarBox: "size-6! rounded-sm!",
-                  organizationPreviewTextContainer: 
-                    "text-xs! tracking-tight! font-medium! text-foreground! group-data-[collapsible=icon]:hidden!",
-                  organizationPreviewMainIdentifier: "text-[13px]!",
-                  organizationSwitcherTriggerIcon:
-                    "size-4! text-sidebar-foreground! group-data-[collapsible=icon]:hidden!",
-                },
-              }}
-            />
+            {organizationControl}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -200,23 +212,7 @@ export function DashboardSidebar() {
         <UsageContainer />
         <SidebarMenu>
           <SidebarMenuItem>
-            <UserButton
-              showName
-              fallback={
-                <Skeleton className="h-8.5 w-full group-data-[collapsible=icon]:size-8 rounded-md border border-border bg-white" />
-              }
-              appearance={{
-                elements: {
-                  rootBox:
-                    "w-full! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:justify-center!",
-                  userButtonTrigger:
-                    "w-full! justify-between! bg-white! border! border-border! rounded-md! pl-1! pr-2! py-1! shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)]! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:p-1! group-data-[collapsible=icon]:after:hidden! [--border:color-mix(in_srgb,transparent,var(--clerk-color-neutral,#000000)_15%)]!",
-                  userButtonBox: "flex-row-reverse! gap-2!",
-                  userButtonOuterIdentifier: "text-[13px]! tracking-tight! font-medium! text-foreground! pl-0! group-data-[collapsible=icon]:hidden!",
-                  userButtonAvatarBox: "size-6!",
-                }
-              }}
-            />
+            {userControl}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
@@ -224,4 +220,75 @@ export function DashboardSidebar() {
     </Sidebar>
     </>
   );
+}
+
+function ClerkDashboardSidebar() {
+  const clerk = useClerk();
+
+  return (
+    <DashboardSidebarContent
+      onSettingsClick={() => clerk.openOrganizationProfile()}
+      organizationControl={
+        <OrganizationSwitcher
+          hidePersonal
+          fallback={
+            <Skeleton
+              className="h-8.5 w-full group-data-[collapsible=icon]:size-8 rounded-md border bg-white"
+            />
+          }
+          appearance={{
+            elements: {
+              rootBox:
+                "w-full! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:justify-center!",
+              organizationSwitcherTrigger:
+                "w-full! justify-between! bg-white! border! border-border! rounded-md! pl-1! pr-2! py-1! gap-3! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:p-1! shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)]!",
+              organizationPreview: "gap-2!",
+              organizationPreviewAvatarBox: "size-6! rounded-sm!",
+              organizationPreviewTextContainer:
+                "text-xs! tracking-tight! font-medium! text-foreground! group-data-[collapsible=icon]:hidden!",
+              organizationPreviewMainIdentifier: "text-[13px]!",
+              organizationSwitcherTriggerIcon:
+                "size-4! text-sidebar-foreground! group-data-[collapsible=icon]:hidden!",
+            },
+          }}
+        />
+      }
+      userControl={
+        <UserButton
+          showName
+          fallback={
+            <Skeleton className="h-8.5 w-full group-data-[collapsible=icon]:size-8 rounded-md border border-border bg-white" />
+          }
+          appearance={{
+            elements: {
+              rootBox:
+                "w-full! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:justify-center!",
+              userButtonTrigger:
+                "w-full! justify-between! bg-white! border! border-border! rounded-md! pl-1! pr-2! py-1! shadow-[0px_1px_1.5px_0px_rgba(44,54,53,0.03)]! group-data-[collapsible=icon]:w-auto! group-data-[collapsible=icon]:p-1! group-data-[collapsible=icon]:after:hidden! [--border:color-mix(in_srgb,transparent,var(--clerk-color-neutral,#000000)_15%)]!",
+              userButtonBox: "flex-row-reverse! gap-2!",
+              userButtonOuterIdentifier:
+                "text-[13px]! tracking-tight! font-medium! text-foreground! pl-0! group-data-[collapsible=icon]:hidden!",
+              userButtonAvatarBox: "size-6!",
+            }
+          }}
+        />
+      }
+    />
+  );
+}
+
+export function DashboardSidebar() {
+  if (isLocalDemoAuthEnabled && !isClerkPublicConfigured) {
+    return (
+      <DashboardSidebarContent
+        onSettingsClick={() => {
+          window.alert("Configure Clerk to manage organization settings.");
+        }}
+        organizationControl={<LocalOrganizationControl />}
+        userControl={<LocalUserControl />}
+      />
+    );
+  }
+
+  return <ClerkDashboardSidebar />;
 }

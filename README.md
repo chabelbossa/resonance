@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resonance
 
-## Getting Started
+Resonance is a Next.js 16 text-to-speech and voice-cloning dashboard. It uses
+Clerk for authentication and organizations, Prisma/PostgreSQL for voice and
+generation records, Polar for usage billing, Cloudflare R2 for audio storage,
+and a Chatterbox-compatible API for speech generation.
 
-First, run the development server:
+## Local Setup
+
+Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a local PostgreSQL database and configure `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+createdb resonance_dev
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app expects these variables:
 
-## Learn More
+```bash
+DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/resonance_dev
+APP_URL=http://127.0.0.1:3230
+POLAR_ACCESS_TOKEN=
+POLAR_SERVER=sandbox
+POLAR_PRODUCT_ID=
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+R2_PUBLIC_URL=
+CHATTERBOX_API_URL=
+CHATTERBOX_API_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+```
 
-To learn more about Next.js, take a look at the following resources:
+For local UI verification without Clerk keys, enable the explicit demo mode:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+LOCAL_DEMO_AUTH=true
+NEXT_PUBLIC_LOCAL_DEMO_AUTH=true
+SKIP_ENV_VALIDATION=true
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Demo auth is intended for local development only. Production must use real
+Clerk, Polar, R2, and Chatterbox credentials.
 
-## Deploy on Vercel
+## Database
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Generate Prisma and sync the local database:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+System voices can be seeded from `scripts/system-voices`, but that seed uploads
+audio to R2 and therefore needs real R2 credentials.
+
+## Development
+
+Run the app locally:
+
+```bash
+npm run dev -- --hostname 127.0.0.1 --port 3230
+```
+
+Useful checks:
+
+```bash
+npm run lint
+npm run build
+npm audit --audit-level=moderate
+```
+
+## Verification Snapshot
+
+Verified locally on 2026-05-29:
+
+- `npm audit --audit-level=moderate` found 0 vulnerabilities.
+- `npx prisma db push` synced the local `resonance_dev` schema.
+- `npm run lint` completed with 0 errors and 3 existing warnings.
+- `npm run build` completed successfully on Next.js 16.2.6.
+- Browser verification passed for `/`, `/voices`, and `/text-to-speech` with no console errors or warnings after reload.
+
+Screenshots:
+
+- [Dashboard](docs/screenshots/dashboard-local.png)
+- [Voices](docs/screenshots/voices-local.png)
+- [Text to Speech](docs/screenshots/text-to-speech-local.png)
+
+## Notes
+
+- Local demo auth creates a deterministic local user and organization so the
+  protected dashboard can be verified without Clerk credentials.
+- Speech generation, custom voice uploads, billing checkout, portal sessions,
+  and audio playback require real external service credentials.
+- `postinstall` runs `prisma generate`, so `DATABASE_URL` must be available
+  before installing in a fresh environment.

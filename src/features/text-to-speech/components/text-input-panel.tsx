@@ -76,9 +76,9 @@ export function TextInputPanel() {
             </Badge>
             <div className="flex items-center gap-3">
               <p className="text-xs tracking-tight">
-                {text.length.toLocaleString()}
+                {text.length.toLocaleString("en-US")}
                 <span className="text-muted-foreground">
-                  &nbsp;/&nbsp;{TEXT_MAX_LENGTH.toLocaleString()} characters
+                  &nbsp;/&nbsp;{TEXT_MAX_LENGTH.toLocaleString("en-US")} characters
                 </span>
               </p>
               <GenerateButton

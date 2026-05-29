@@ -5,18 +5,15 @@ import { Headphones, ThumbsUp } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { isClerkPublicConfigured, isLocalDemoAuthEnabled } from "@/lib/auth-config";
 
-export function DashboardHeader() {
-  const { isLoaded, user } = useUser();
-
+function HeaderContent({ name }: { name: string }) {
   return (
     <div className="flex items-start justify-between">
       <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">
-          Nice to see you
-        </p>
+        <p className="text-sm text-muted-foreground">Nice to see you</p>
         <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
-          {isLoaded ? (user?.fullName ?? user?.firstName ?? "there") : "..."}
+          {name}
         </h1>
       </div>
 
@@ -34,8 +31,26 @@ export function DashboardHeader() {
           </Link>
         </Button>
       </div>
-
-      
     </div>
+  );
+}
+
+function ClerkDashboardHeader() {
+  const { isLoaded, user } = useUser();
+
+  return (
+    <HeaderContent
+      name={isLoaded ? (user?.fullName ?? user?.firstName ?? "there") : "..."}
+    />
+  );
+}
+
+export function DashboardHeader() {
+  if (isLocalDemoAuthEnabled && !isClerkPublicConfigured) {
+    return <HeaderContent name="Local demo" />;
+  }
+
+  return (
+    <ClerkDashboardHeader />
   );
 };

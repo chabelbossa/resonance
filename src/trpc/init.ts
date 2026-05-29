@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/node";
-import { auth } from '@clerk/nextjs/server';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { cache } from 'react';
 import superjson from "superjson";
+import { getAuthContext } from "@/lib/auth-server";
 export const createTRPCContext = cache(async () => {
   /**
    * @see: https://trpc.io/docs/server/context
@@ -33,7 +33,7 @@ export const baseProcedure = t.procedure.use(sentryMiddleware);
 
 // Authenticated procedure - calls auth() only when needed
 export const authProcedure = baseProcedure.use(async ({ next }) => {
-  const { userId } = await auth();
+  const { userId } = await getAuthContext();
 
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -46,7 +46,7 @@ export const authProcedure = baseProcedure.use(async ({ next }) => {
 
 // Organization procedure - requires userId and orgId
 export const orgProcedure = baseProcedure.use(async ({ next }) => {
-  const { userId, orgId } = await auth();
+  const { userId, orgId } = await getAuthContext();
 
   if (!userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
